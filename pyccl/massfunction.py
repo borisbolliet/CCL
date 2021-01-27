@@ -61,8 +61,9 @@ def halo_bias(cosmo, halo_mass, a, overdensity=200):
     elif mf_par == 'shethtormen':
         bf = hal.HaloBiasSheth99(cosmo)
     else:
-        raise CCLError("No b(M) fitting function implemented for "
-                       "mass_function_method: "+mf_par)
+        bf = hal.HaloBiasTinker10(cosmo, mdef)
+        # raise CCLError("No b(M) fitting function implemented for "
+        #                "mass_function_method: "+mf_par)
     return bf.get_halo_bias(cosmo,
                             halo_mass,
                             a)

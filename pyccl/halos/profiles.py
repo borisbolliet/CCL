@@ -1158,6 +1158,9 @@ class HaloProfileHOD(HaloProfile):
         bmax_p (float): tilt parameter for
             :math:`\\beta_{\\rm max}`.
         a_pivot (float): pivot scale factor :math:`a_*`.
+        hod_type: unwise or none
+        M1_prime_HOD_factor: hod
+        M_min_HOD_satellite_mass_factor_unwise: hod
     """
     name = 'HOD'
 
@@ -1167,7 +1170,10 @@ class HaloProfileHOD(HaloProfile):
                  lM1_0=13.3, lM1_p=0., alpha_0=1.,
                  alpha_p=0., fc_0=1., fc_p=0.,
                  bg_0=1., bg_p=0., bmax_0=1., bmax_p=0.,
-                 a_pivot=1.):
+                 a_pivot=1.,hod_type = None,
+                 M1_prime_HOD_factor = 15.,
+                 M_min_HOD_satellite_mass_factor_unwise = 0.1,
+                 M_min_HOD_mass_factor_unwise = 1.):
         if not isinstance(c_M_relation, Concentration):
             raise TypeError("c_M_relation must be of type `Concentration`)")
 
@@ -1189,6 +1195,10 @@ class HaloProfileHOD(HaloProfile):
         self.bmax_0 = bmax_0
         self.bmax_p = bmax_p
         self.a_pivot = a_pivot
+        self.hod_type = hod_type
+        self.M_min_HOD_satellite_mass_factor_unwise = M_min_HOD_satellite_mass_factor_unwise
+        self.M1_prime_HOD_factor = M1_prime_HOD_factor
+        self.M_min_HOD_mass_factor_unwise = M_min_HOD_mass_factor_unwise
         super(HaloProfileHOD, self).__init__()
 
     def _get_cM(self, cosmo, M, a, mdef=None):
@@ -1391,13 +1401,67 @@ class HaloProfileHOD(HaloProfile):
 
     def _Nc(self, M, a):
         # Number of centrals
-        Mmin = 10.**(self.lMmin_0 + self.lMmin_p * (a - self.a_pivot))
-        siglM = self.siglM_0 + self.siglM_p * (a - self.a_pivot)
-        return 0.5 * (1 + erf(np.log(M/Mmin)/siglM))
+        if self.hod_type == 'unwise':
+            Mmin = 10.**self._unwise_mthresh(a)
+            siglM = np.sqrt(2)*self.siglM_0
+            return 0.5 * (1 + erf(np.log10(M/Mmin)/siglM))
+        else:
+            Mmin = 10.**(self.lMmin_0 + self.lMmin_p * (a - self.a_pivot))
+            siglM = self.siglM_0
+            return 0.5 * (1 + erf(np.log(M/Mmin)/siglM))
 
     def _Ns(self, M, a):
-        # Number of satellites
-        M0 = 10.**(self.lM0_0 + self.lM0_p * (a - self.a_pivot))
-        M1 = 10.**(self.lM1_0 + self.lM1_p * (a - self.a_pivot))
+        if self.hod_type == 'unwise':
+            #print(self.hod_type)
+            M0 = self.M_min_HOD_satellite_mass_factor_unwise*10**self._unwise_mthresh(a)
+            M1 = self.M1_prime_HOD_factor*10**self._unwise_mthresh(a)
+            #exit()
+        else:
+            # Number of satellites
+            M0 = 10.**(self.lM0_0 + self.lM0_p * (a - self.a_pivot))
+            M1 = 10.**(self.lM1_0 + self.lM1_p * (a - self.a_pivot))
         alpha = self.alpha_0 + self.alpha_p * (a - self.a_pivot)
         return np.heaviside(M-M0, 1) * (np.fabs(M-M0) / M1)**alpha
+
+
+    def _unwise_mthresh(self,a):
+        zz = 1./a-1.
+        isamp = 'red'
+        #green_option='default'
+        '''Gives mcut for 5-param Zheng HOD for wise sample isamp at redshift zz.
+        Satellite fractions 5-10% for red and green, and 25% for blue.
+        green_option = 'default' or 'shallower'; 'default' is the default
+        bias evolution, and shallower is a somewhat shallower bias evolution,
+        but with higher masses.'''
+        #zz = 2.1 # BB debug
+        if isamp=='red':
+            zall = [ 0.75,  1.00,  1.5,  2.0]
+            mcut_all = [12.00, 12.00, 12.6, 13.6]
+            if zz <= 0.75:
+                mcut = 12.00
+            elif (zz > 0.75) & (zz <= 2.00):
+                mcut = np.interp(zz,zall,mcut_all)
+            elif zz >= 2.00:
+                mcut = 13.6
+        # elif isamp=='green':
+        #     if green_option == 'default':
+        #         zall = [0.00, 0.25, 0.4, 0.5, 0.65, 0.75, 1.00, 1.25, 1.50, 2.00, 2.50]
+        #         mcut_all = [11.9, 12.0, 12.15, 12.15, 11.75, 11.75, 12.4, 12.6, 12.75, 13.25, 13.25]
+        #         if zz <= 2.5:
+        #            mcut = np.interp(zz, zall,mcut_all)
+        #         else:
+        #             mcut = 13.55
+        #     elif green_option == 'shallower':
+        #         zall = [0.25, 0.4, 0.5, 0.65, 0.75, 1.00]
+        #         mcut_all = [11.5, 12, 12, 11, 11, 12.72]
+        #         if zz <= 1.0:
+        #             mcut = np.interp(zz, zall,mcut_all)
+        #         else:
+        #             mcut = -0.5161*zz**4+2.919*zz**3-5.384*zz**2+\
+        #                        3.842*zz+12.01 if zz < 2.5 else 13.42
+        # elif isamp=='blue':
+        #     mcut = 11.65 + zz
+        #mcut = 14. # BB debug
+        return self.M_min_HOD_mass_factor_unwise*mcut
+
+        #vec_unwise_mthresh = np.vectorize(unwise_mthresh)

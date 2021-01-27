@@ -73,4 +73,8 @@ def test_hodcl():
                                 (z_arr, np.ones(len(dndz))))
     cl_hod = ccl.angular_cl(cosmo, tr, tr, l_bm, p_of_k_a=pk_hod)
 
+    print(cl_hod)
+
     assert np.all(np.fabs(cl_hod/cl_bm-1) < 0.005)
+
+test_hodcl()

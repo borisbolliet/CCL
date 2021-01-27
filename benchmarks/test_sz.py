@@ -23,5 +23,8 @@ def test_szcl():
     pk = ccl.halos.halomod_Pk2D(COSMO, hmc, prf, get_2h=False)
     tr = ccl.tSZTracer(COSMO, z_max=4.)
     cl = ccl.angular_cl(COSMO, tr, tr, l_bm, p_of_k_a=pk)
+    print(cl)
 
     assert np.all(np.fabs(cl/cl_bm-1) < 2E-2)
+
+test_szcl()
