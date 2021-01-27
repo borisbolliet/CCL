@@ -76,6 +76,9 @@ def get_camb_pk_lin(cosmo):
     cp.Want_cl_2D_array = False
     cp.WantTransfer = True
 
+    ## BB added acccuracy param
+    cp.AccuracyBoost=2
+
     # basic background stuff
     h2 = cosmo['h']**2
     cp.H0 = cosmo['h'] * 100
@@ -150,9 +153,23 @@ def get_camb_pk_lin(cosmo):
 
     # run CAMB and get results
     camb_res = camb.get_results(cp)
+
+
     k, z, pk = camb_res.get_linear_matter_power_spectrum(
         hubble_units=True, nonlinear=False)
 
+
+    ## BB output pk
+    # at zsx
+    zsx = 1.
+    PK = camb.get_matter_power_interpolator(cp,
+                                            nonlinear=False,
+                                            hubble_units=False,
+                                            k_hunit=False,
+                                            kmax=k.max(),
+                                            zmax=z.max()+1.)
+    np.savetxt("/Users/boris/Work/CLASS-SZ/SO-SZ/class_sz_external_data_and_scripts/pk_ccl.txt",
+                np.c_[k,PK.P(zsx, k)])
     # convert to non-h inverse units
     k *= cosmo['h']
     pk /= (h2 * cosmo['h'])

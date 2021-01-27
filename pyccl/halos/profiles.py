@@ -1173,7 +1173,8 @@ class HaloProfileHOD(HaloProfile):
                  a_pivot=1.,hod_type = None,
                  M1_prime_HOD_factor = 15.,
                  M_min_HOD_satellite_mass_factor_unwise = 0.1,
-                 M_min_HOD_mass_factor_unwise = 1.):
+                 M_min_HOD_mass_factor_unwise = 1.,
+                 sample_id = 'red'):
         if not isinstance(c_M_relation, Concentration):
             raise TypeError("c_M_relation must be of type `Concentration`)")
 
@@ -1199,6 +1200,7 @@ class HaloProfileHOD(HaloProfile):
         self.M_min_HOD_satellite_mass_factor_unwise = M_min_HOD_satellite_mass_factor_unwise
         self.M1_prime_HOD_factor = M1_prime_HOD_factor
         self.M_min_HOD_mass_factor_unwise = M_min_HOD_mass_factor_unwise
+        self.sample_id = sample_id
         super(HaloProfileHOD, self).__init__()
 
     def _get_cM(self, cosmo, M, a, mdef=None):
@@ -1427,7 +1429,7 @@ class HaloProfileHOD(HaloProfile):
 
     def _unwise_mthresh(self,a):
         zz = 1./a-1.
-        isamp = 'red'
+        isamp = self.sample_id
         green_option='default'
         '''Gives mcut for 5-param Zheng HOD for wise sample isamp at redshift zz.
         Satellite fractions 5-10% for red and green, and 25% for blue.
