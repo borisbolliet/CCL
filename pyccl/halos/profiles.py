@@ -1310,7 +1310,8 @@ class HaloProfileHOD(HaloProfile):
             prof = np.squeeze(prof, axis=-1)
         if np.ndim(M) == 0:
             prof = np.squeeze(prof, axis=0)
-        return prof
+        return None
+        # return prof
 
     def _usat_fourier(self, cosmo, k, M, a, mass_def):
         M_use = np.atleast_1d(M)
@@ -1427,7 +1428,7 @@ class HaloProfileHOD(HaloProfile):
     def _unwise_mthresh(self,a):
         zz = 1./a-1.
         isamp = 'red'
-        #green_option='default'
+        green_option='default'
         '''Gives mcut for 5-param Zheng HOD for wise sample isamp at redshift zz.
         Satellite fractions 5-10% for red and green, and 25% for blue.
         green_option = 'default' or 'shallower'; 'default' is the default
@@ -1443,24 +1444,24 @@ class HaloProfileHOD(HaloProfile):
                 mcut = np.interp(zz,zall,mcut_all)
             elif zz >= 2.00:
                 mcut = 13.6
-        # elif isamp=='green':
-        #     if green_option == 'default':
-        #         zall = [0.00, 0.25, 0.4, 0.5, 0.65, 0.75, 1.00, 1.25, 1.50, 2.00, 2.50]
-        #         mcut_all = [11.9, 12.0, 12.15, 12.15, 11.75, 11.75, 12.4, 12.6, 12.75, 13.25, 13.25]
-        #         if zz <= 2.5:
-        #            mcut = np.interp(zz, zall,mcut_all)
-        #         else:
-        #             mcut = 13.55
-        #     elif green_option == 'shallower':
-        #         zall = [0.25, 0.4, 0.5, 0.65, 0.75, 1.00]
-        #         mcut_all = [11.5, 12, 12, 11, 11, 12.72]
-        #         if zz <= 1.0:
-        #             mcut = np.interp(zz, zall,mcut_all)
-        #         else:
-        #             mcut = -0.5161*zz**4+2.919*zz**3-5.384*zz**2+\
-        #                        3.842*zz+12.01 if zz < 2.5 else 13.42
-        # elif isamp=='blue':
-        #     mcut = 11.65 + zz
+        elif isamp=='green':
+            if green_option == 'default':
+                zall = [0.00, 0.25, 0.4, 0.5, 0.65, 0.75, 1.00, 1.25, 1.50, 2.00, 2.50]
+                mcut_all = [11.9, 12.0, 12.15, 12.15, 11.75, 11.75, 12.4, 12.6, 12.75, 13.25, 13.25]
+                if zz <= 2.5:
+                   mcut = np.interp(zz, zall,mcut_all)
+                else:
+                    mcut = 13.55
+            elif green_option == 'shallower':
+                zall = [0.25, 0.4, 0.5, 0.65, 0.75, 1.00]
+                mcut_all = [11.5, 12, 12, 11, 11, 12.72]
+                if zz <= 1.0:
+                    mcut = np.interp(zz, zall,mcut_all)
+                else:
+                    mcut = -0.5161*zz**4+2.919*zz**3-5.384*zz**2+\
+                               3.842*zz+12.01 if zz < 2.5 else 13.42
+        elif isamp=='blue':
+            mcut = 11.65 + zz
         #mcut = 14. # BB debug
         return self.M_min_HOD_mass_factor_unwise*mcut
 
