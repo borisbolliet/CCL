@@ -350,6 +350,7 @@ class ConcentrationDuffy08(Concentration):
 
     def _concentration(self, cosmo, M, a):
         M_pivot_inv = cosmo.cosmo.params.h * 5E-13
+        #M_pivot_inv = (2e12)**-1.##BB debug
         return self.A * (M * M_pivot_inv)**self.B * a**(-self.C)
 
 

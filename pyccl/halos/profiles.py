@@ -1387,6 +1387,8 @@ class HaloProfileHOD(HaloProfile):
         Ns = self._Ns(M_use, a)
         fc = self._fc(a)
         # NFW profile
+        #print('doing usat') ## BB debug
+        fc = 1. # BB debug
         uk = self._usat_fourier(cosmo, k_use, M_use, a, mass_def)
 
         prof = Ns[:, None] * uk
@@ -1405,8 +1407,15 @@ class HaloProfileHOD(HaloProfile):
     def _Nc(self, M, a):
         # Number of centrals
         if self.hod_type == 'unwise':
+            # a = 1./1.5 ## BB debug
+            # M = 1e12 /0.6732## BB debug
             Mmin = 10.**self._unwise_mthresh(a)
             siglM = np.sqrt(2)*self.siglM_0
+            # print('Mmin, siglM :', Mmin,siglM)
+
+            # result = 0.5 * (1. + erf(np.log10(M/Mmin)/siglM)) ## BB debug
+            # # print('result Nc: ', result) ## BB debug
+            # exit(0) ## BB debug
             return 0.5 * (1 + erf(np.log10(M/Mmin)/siglM))
         else:
             Mmin = 10.**(self.lMmin_0 + self.lMmin_p * (a - self.a_pivot))
@@ -1416,6 +1425,8 @@ class HaloProfileHOD(HaloProfile):
     def _Ns(self, M, a):
         if self.hod_type == 'unwise':
             #print(self.hod_type)
+            # a = 0.5 ## BB debug
+            # M = 1e13 ## BB debug
             M0 = self.M_min_HOD_satellite_mass_factor_unwise*10**self._unwise_mthresh(a)
             M1 = self.M1_prime_HOD_factor*10**self._unwise_mthresh(a)
             #exit()
@@ -1424,6 +1435,9 @@ class HaloProfileHOD(HaloProfile):
             M0 = 10.**(self.lM0_0 + self.lM0_p * (a - self.a_pivot))
             M1 = 10.**(self.lM1_0 + self.lM1_p * (a - self.a_pivot))
         alpha = self.alpha_0 + self.alpha_p * (a - self.a_pivot)
+        # result = np.heaviside(M-M0, 1) * (np.fabs(M-M0) / M1)**alpha## BB debug
+        # print('result Ns: ', result) ## BB debug
+        # exit(0) ## BB debug
         return np.heaviside(M-M0, 1) * (np.fabs(M-M0) / M1)**alpha
 
 
